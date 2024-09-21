@@ -1,0 +1,2 @@
+#!/bin/bash
+./run_shell /bin/bash /usr/share/lib/run_workspace.sh 

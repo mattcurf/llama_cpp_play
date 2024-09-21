@@ -1,0 +1,85 @@
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=america/los_angeles
+ENV PIP_ROOT_USER_ACTION=ignore
+
+# Base packages
+RUN apt update && \
+    apt install --no-install-recommends -q -y \
+    build-essential \
+    cmake \
+    ocl-icd-libopencl1 \
+    git \
+    software-properties-common \
+    wget 
+
+# Python
+RUN wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" && \
+  bash Miniforge3-$(uname)-$(uname -m).sh -b 
+
+# Level Zero
+RUN mkdir -p /tmp/gpu && \
+ cd /tmp/gpu && \
+ wget https://github.com/oneapi-src/level-zero/releases/download/v1.17.44/level-zero_1.17.44+u24.04_amd64.deb && \
+ dpkg -i *.deb && \
+ rm *.deb
+
+# Intel GPU compute user-space drivers
+RUN mkdir -p /tmp/gpu && \
+ cd /tmp/gpu && \
+ wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17537.20/intel-igc-core_1.0.17537.20_amd64.deb && \
+ wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17537.20/intel-igc-opencl_1.0.17537.20_amd64.deb && \
+ wget https://github.com/intel/compute-runtime/releases/download/24.35.30872.22/intel-level-zero-gpu_1.3.30872.22_amd64.deb && \
+ wget https://github.com/intel/compute-runtime/releases/download/24.35.30872.22/intel-opencl-icd_24.35.30872.22_amd64.deb && \
+ wget https://github.com/intel/compute-runtime/releases/download/24.35.30872.22/libigdgmm12_22.5.0_amd64.deb && \
+ dpkg -i *.deb && \
+ rm *.deb
+
+# Required compute runtime level-zero variables
+ENV ZES_ENABLE_SYSMAN=1
+
+# oneAPI 
+RUN wget -qO - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | \
+   gpg --dearmor --output /usr/share/keyrings/oneapi-archive-keyring.gpg && \
+   echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | \
+   tee /etc/apt/sources.list.d/oneAPI.list && \
+  apt update && \
+  apt install --no-install-recommends -q -y \
+  intel-oneapi-common-vars=2024.0.0-49406 \
+  intel-oneapi-common-oneapi-vars=2024.0.0-49406 \
+  intel-oneapi-mkl=2024.0.0-49656 \
+  intel-oneapi-ippcp=2021.9.1-5 \
+  intel-oneapi-ipp=2021.10.1-13 \
+  intel-oneapi-dnnl=2024.0.0-49521 \
+  intel-oneapi-tcm-1.0=1.0.0-435 \
+  intel-oneapi-compiler-dpcpp-cpp=2024.0.2-49895 \
+  intel-oneapi-dpcpp-ct=2024.0.0-49381 \
+  intel-oneapi-ippcp-devel=2021.9.1-5 \
+  intel-oneapi-dnnl-devel=2024.0.0-49521 \
+  intel-oneapi-ipp-devel=2021.10.1-13 \
+  intel-oneapi-mkl-devel=2024.0.0-49656 
+
+# Required oneAPI environment variables
+ENV USE_XETLA=OFF
+ENV SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
+ENV SYCL_CACHE_PERSISTENT=1
+
+COPY _init.sh /usr/share/lib/init_workspace.sh
+COPY _run.sh /usr/share/lib/run_workspace.sh
+
+RUN /bin/bash -c "source /root/miniforge3/bin/activate && \
+  conda create -n llm python=3.11* libuv -y" && \
+  /bin/bash -c "source /root/miniforge3/bin/activate llm && \
+  pip install --upgrade pip && \
+  pip install requests hf_transfer huggingface_hub[cli]" 
+
+# Build llama.cpp from source
+RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh && \
+  cd / && \
+  git clone https://github.com/ggerganov/llama.cpp && \
+  cd llama.cpp && \
+  git checkout d13edb17ed1ce3b961016cbdb616b1c8d161c026 && \
+  cmake -B build -DGGML_SYCL=ON -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx && \
+  cmake --build build --config Release -j -v"
+
+ENV HF_HUB_ENABLE_HF_TRANSFER=1
