@@ -13,4 +13,4 @@ if [ -d "/dev/accel" ]; then
   _args+=" --device /dev/accel:/dev/accel -e HAS_NPU=1"
 fi
 
-docker run -it --rm --security-opt seccomp=unconfined -v `pwd`:/project -w /project $_args $_docker_image $@
+docker run -it --rm --security-opt seccomp=unconfined -v `pwd`:/project -v gguf-model-volume:/models -w /project -e HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN $_args $_docker_image $@

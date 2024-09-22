@@ -2,6 +2,7 @@
 
 if [ "$1" = "-f" ]; then
   args+="--no-cache "
+    docker volume rm gguf-model-volume
 fi
 
 arch=$(uname -m)

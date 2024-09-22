@@ -64,9 +64,6 @@ ENV USE_XETLA=OFF
 ENV SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
 ENV SYCL_CACHE_PERSISTENT=1
 
-COPY _init.sh /usr/share/lib/init_workspace.sh
-COPY _run.sh /usr/share/lib/run_workspace.sh
-
 RUN /bin/bash -c "source /root/miniforge3/bin/activate && \
   conda create -n llm python=3.11* libuv -y" && \
   /bin/bash -c "source /root/miniforge3/bin/activate llm && \
