@@ -70,12 +70,12 @@ RUN /bin/bash -c "source /root/miniforge3/bin/activate && \
   pip install --upgrade pip && \
   pip install requests hf_transfer huggingface_hub[cli]" 
 
-# Build llama.cpp from source
+# Build llama.cpp from source, using same commit ID as ipex-llm
 RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh && \
   cd / && \
   git clone https://github.com/ggerganov/llama.cpp && \
   cd llama.cpp && \
-  git checkout d13edb17ed1ce3b961016cbdb616b1c8d161c026 && \
+  git checkout a1631e53f6763e17da522ba219b030d8932900bd && \
   cmake -B build -DGGML_SYCL=ON -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx && \
   cmake --build build --config Release -j -v"
 
