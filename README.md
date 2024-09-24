@@ -43,6 +43,8 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
 
+Note: This configuration above grants full root access of the container to your machine.  Only follow this if you understand the implications for doing so, and don't follow this procedure on a production machine.
+
 ## Usage
 
 For each of the 'llama_cpp_upstream_sycl' and 'ipex-llm' subdirectories, first build the container by typing:
@@ -50,6 +52,8 @@ For each of the 'llama_cpp_upstream_sycl' and 'ipex-llm' subdirectories, first b
 $ cd ipex-llm
 $ ./build
 ```
+
+Note: If you want to force a rebuild of the container and ignore any docker cached image, pass the '-f' flag to 'build' and the entire image will be rebuilt
 
 To run the llm benchmark type:
 ```
@@ -69,6 +73,13 @@ $ cd ipex-llm
 $ ./run
 ```
 Then connect to the web server hosting the chatbot at <ip_address_of_host>:8080
+
+# Asset caching
+
+Note that the models and assets used are downloaded only once and cached in a docker volume called 'gguf-model-volume' so that subsequent invocations will not download the assets again.  To remove this volume and recover the storage space:
+```
+$ docker volume rm gguf-model-volume
+```
 
 ## References
 * https://github.com/ggerganov/llama.cpp
