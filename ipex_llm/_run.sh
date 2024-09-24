@@ -1,5 +1,5 @@
 source /project/_init.sh
-source /project/_download_models.sh
+source /project/_download_assets.sh
 
 #_model=Meta-Llama-3.1-8B-Instruct.f16.gguf
 #_model=Meta-Llama-3.1-8B-Instruct.Q8_0.gguf

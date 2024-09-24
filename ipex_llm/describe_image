@@ -1,0 +1,2 @@
+#!/bin/bash
+./run_shell /bin/bash /project/_describe_image.sh 

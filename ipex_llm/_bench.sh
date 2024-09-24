@@ -1,5 +1,5 @@
 source /project/_init.sh
-source /project/_download_models.sh
+source /project/_download_assets.sh
 
 # https://github.com/ggerganov/llama.cpp/blob/master/examples/llama-bench/README.md
 /llama.cpp/build/bin/llama-bench \
